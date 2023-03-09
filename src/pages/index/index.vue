@@ -4,6 +4,9 @@
     <button @tap="getUserInfo">
       button1
     </button>
+    <button @tap="aiGenerate">
+      aiGenerate
+    </button>
   </view>
 </template>
 
@@ -17,6 +20,17 @@ const getUserInfo = () => {
     name: 'getInfo',
     complete: res => {
       console.log('callFunction test result: ', res)
+      wx.hideLoading()
+    }
+  })
+}
+
+const aiGenerate = () => {
+  wx.showLoading();
+  wx.cloud.callFunction({
+    name: 'generate',
+    complete: res => {
+      console.log('callFunction generate result: ', res)
       wx.hideLoading()
     }
   })
