@@ -1,11 +1,11 @@
 // 云函数入口文件
-const cloud = require('wx-server-sdk')
+const cloud = require('wx-server-sdk');
 const request = require('request');
 const { createParser } = require("eventsource-parser");
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV }) // 使用当前云环境
 
-const encoder = new TextEncoder();
+// const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 let counter = 0;
@@ -20,7 +20,7 @@ const onParse = (event) => {
     try {
       const json = JSON.parse(data);
       // const text = json.choices[0].text;
-      const text = json.choices[0].delta?.content || "";
+      const text = (json.choices[0].delta && json.choices[0].delta.content) || "";
 
       if (counter < 2 && (text.match(/\n/) || []).length) {
         // this is a prefix character (i.e., "\n\n"), do nothing
@@ -38,11 +38,43 @@ const onParse = (event) => {
 
 const parser = createParser(onParse);
 
-// 云函数入口函数
-exports.main = async (event, context) => {
+const reqOpenAI = function (payload) {
   counter = 0;
   steamStr = "";
 
+  return new Promise((resolve, reject) => {
+    const options = {
+      url: "https://openai.yaavi.me/v1/chat/completions",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer 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`,
+      },
+      method: "POST",
+      body: JSON.stringify(payload),
+    };
+  
+    const req = request(options, (err, res, body) => {
+      if (err) {
+        console.log('err')
+        reject(err)
+      } else {
+        console.log('!err')
+        console.log('steamStr', steamStr)
+        resolve({ steamStr })
+      }
+    });
+  
+    req.on('data', (chunk) => {
+      parser.feed(decoder.decode(chunk));
+    });
+    req.on('error', (err) => {
+      console.log('error', err)
+    });
+  })
+}
+
+// 云函数入口函数
+exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
 
   const lang = event.lang || ""
@@ -55,11 +87,11 @@ exports.main = async (event, context) => {
     "说了啥":"用一段话详略得当总结这段聊天内容",
     "老胡生成器":"按照下面模板，写篇文章: '近期互联网上出现了___, 老胡看到___,知道大家很___,老胡忍不住啰嗦几句,虽然___, 确实存在部分___, 但是___, 最后老胡呼吁___。'，内容是",
     "写个正则":"写个正则表达式",
-    "根据单词写个英语作文":"写一个符合雅思7分要求的100个单词的小作文，用到下面的单词",
+    "英语作文":"写一个符合雅思7分要求的100个单词的小作文，用到下面的单词",
     "修改英语语法":"帮我改一下下面这段话的英语语法，符合雅思七分的要求",
     "编日报":"帮我写个工作的日报，内容+列表的形式",
     "哄媳妇睡觉小故事":"帮我生成一个500字的有意思的小故事，用来哄媳妇睡觉",
-    "小红书文案生成器":"帮我扩展一下这段文字，起一个能吸引眼球的标题，内容润色成小红书的风格，每行开头都用不同的emoji:"
+    "小红书文案":"帮我扩展一下这段文字，起一个能吸引眼球的标题，内容润色成小红书的风格，每行开头都用不同的emoji:"
   }
 
   const prompt = `${promptObj[lang] ? promptObj[lang] + ":\n" : ""}${text}${text.slice(-1) === "." ? "" : "."}`
@@ -79,37 +111,19 @@ exports.main = async (event, context) => {
     stream: true,
     n: 1,
   };
+  
+  try {
+    const { steamStr } = await reqOpenAI(payload)
 
-  const options = {
-    url: "https://openai.yaavi.me/v1/chat/completions",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer xxx`,
-    },
-    method: "POST",
-    body: JSON.stringify(payload),
-  };
-
-  const req = request(options, (err, res, body) => {
-    if (err) {
-      console.log('err')
-    } else {
-      console.log('!err')
-      console.log('steamStr', steamStr)
+    return {
+      steamStr,
+      event,
+      openid: wxContext.OPENID,
+      appid: wxContext.APPID,
+      unionid: wxContext.UNIONID,
     }
-  });
 
-  req.on('data', (chunk) => {
-    parser.feed(decoder.decode(chunk));
-  });
-  req.on('error', (err) => {
-    console.log('err', err)
-  });
-
-  return {
-    event,
-    openid: wxContext.OPENID,
-    appid: wxContext.APPID,
-    unionid: wxContext.UNIONID,
+  } catch (e) {
+    return 'error'
   }
 }

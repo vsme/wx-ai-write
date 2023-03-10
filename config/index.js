@@ -1,15 +1,19 @@
+const ComponentsPlugin = require('unplugin-vue-components/webpack')
+const NutUIResolver = require('@nutui/nutui-taro/dist/resolver')
+
 const config = {
   projectName: 'wx-ai-write',
   date: '2023-3-9',
   designWidth: 750,
   deviceRatio: {
+    375: 2 / 1,
     640: 2.34 / 2,
     750: 1,
     828: 1.81 / 2
   },
   sourceRoot: 'src',
   outputRoot: 'dist',
-  plugins: [],
+  plugins: ['@tarojs/plugin-html'],
   defineConstants: {
   },
   copy: {
@@ -23,8 +27,14 @@ const config = {
   cache: {
     enable: false // Webpack 持久化缓存配置，建议开启。默认配置请参考：https://docs.taro.zone/docs/config-detail#cache
   },
+  sass: {
+    data: `@import "@nutui/nutui-taro/dist/styles/variables.scss";`,
+  },
   mini: {
     webpackChain (chain) {
+      chain.plugin('unplugin-vue-components').use(ComponentsPlugin({
+        resolvers: [NutUIResolver({taro: true})]
+      }))
       chain.merge({
         module: {
           rule: {
@@ -64,6 +74,11 @@ const config = {
     }
   },
   h5: {
+    webpackChain (chain) {
+      chain.plugin('unplugin-vue-components').use(ComponentsPlugin({
+        resolvers: [NutUIResolver({taro: true})]
+      }))
+    },
     publicPath: '/',
     staticDirectory: 'static',
     postcss: {
