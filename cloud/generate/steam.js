@@ -1,3 +1,4 @@
+const request = require('request');
 const { createParser } = require("eventsource-parser");
 
 // export type ChatGPTAgent = "user" | "system";
@@ -18,21 +19,21 @@ const { createParser } = require("eventsource-parser");
 //   stream: boolean;
 //   n: number;
 // }
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
 
 exports.OpenAIStream = async function(payload) {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-
   let counter = 0;
 
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+  const options = {
+    url: "https://openai.yaavi.me/v1/chat/completions",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ""}`,
+      Authorization: `Bearer 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`,
     },
     method: "POST",
     body: JSON.stringify(payload),
-  });
+  };
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -64,13 +65,23 @@ exports.OpenAIStream = async function(payload) {
         }
       }
 
-      // stream response (SSE) from OpenAI may be fragmented into multiple chunks
-      // this ensures we properly read chunks and invoke an event for each SSE event stream
+      const req = request(options, (err, res, body) => {
+        if (err) {
+          controller.error(err);
+        } else {
+          controller.close();
+        }
+      });
+
+      // OpenAI 的 SSE 响应可能会被分成多个块
+      // 这个函数确保我们正确地读取这些块，并且为每个 SSE 事件流触发一个事件。
       const parser = createParser(onParse);
-      // https://web.dev/streams/#asynchronous-iteration
-      for await (const chunk of res.body) {
+      req.on('data', (chunk) => {
         parser.feed(decoder.decode(chunk));
-      }
+      });
+      req.on('error', (err) => {
+        controller.error(err);
+      });
     },
   });
 

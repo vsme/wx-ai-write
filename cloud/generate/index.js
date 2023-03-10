@@ -1,22 +1,52 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk')
-const { Configuration, OpenAIApi } = require("openai");
+const request = require('request');
+const { createParser } = require("eventsource-parser");
 
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV }) // 使用当前云环境
 
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+let counter = 0;
+let steamStr = "";
+const onParse = (event) => {
+  if (event.type === "event") {
+    const data = event.data;
+    // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
+    if (data === "[DONE]") {
+      return;
+    }
+    try {
+      const json = JSON.parse(data);
+      // const text = json.choices[0].text;
+      const text = json.choices[0].delta?.content || "";
+
+      if (counter < 2 && (text.match(/\n/) || []).length) {
+        // this is a prefix character (i.e., "\n\n"), do nothing
+        return;
+      }
+      steamStr += text
+      console.log(Date.now(), text)
+      counter++;
+    } catch (e) {
+      // maybe parse error
+      console.log("error", e)
+    }
+  }
+}
+
+const parser = createParser(onParse);
+
 // 云函数入口函数
 exports.main = async (event, context) => {
+  counter = 0;
+  steamStr = "";
+
   const wxContext = cloud.getWXContext()
 
-  console.log({
-    event,
-    openid: wxContext.OPENID,
-    appid: wxContext.APPID,
-    unionid: wxContext.UNIONID,
-  })
-
   const lang = event.lang || ""
-  const text = event.text || "写个正则表达式"
+  const text = event.text || "写个正则表达式:判断是否是邮箱"
 
   let promptObj = {
     "直接发给chatgpt":"",
@@ -50,14 +80,36 @@ exports.main = async (event, context) => {
     n: 1,
   };
 
-  const configuration = new Configuration({
-    apiKey: "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",
+  const options = {
+    url: "https://openai.yaavi.me/v1/chat/completions",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer xxx`,
+    },
+    method: "POST",
+    body: JSON.stringify(payload),
+  };
+
+  const req = request(options, (err, res, body) => {
+    if (err) {
+      console.log('err')
+    } else {
+      console.log('!err')
+      console.log('steamStr', steamStr)
+    }
   });
-  const openai = new OpenAIApi(configuration);
-  const completion = await openai.createChatCompletion(payload);
 
-  console.log(completion.data);
-  console.log(completion.data.choices[0].message);
+  req.on('data', (chunk) => {
+    parser.feed(decoder.decode(chunk));
+  });
+  req.on('error', (err) => {
+    console.log('err', err)
+  });
 
-  return completion
+  return {
+    event,
+    openid: wxContext.OPENID,
+    appid: wxContext.APPID,
+    unionid: wxContext.UNIONID,
+  }
 }

@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "openai": "^3.2.1",
+    "eventsource-parser": "^0.1.0",
     "wx-server-sdk": "~2.6.3"
   }
 }
