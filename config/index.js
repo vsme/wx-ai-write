@@ -1,15 +1,14 @@
 const ComponentsPlugin = require('unplugin-vue-components/webpack')
 const NutUIResolver = require('@nutui/nutui-taro/dist/resolver')
+// const path = require("path")
 
 const config = {
   projectName: 'wx-ai-write',
   date: '2023-3-9',
-  designWidth: 750,
+  designWidth: 375,
   deviceRatio: {
     375: 2 / 1,
-    640: 2.34 / 2,
     750: 1,
-    828: 1.81 / 2
   },
   sourceRoot: 'src',
   outputRoot: 'dist',

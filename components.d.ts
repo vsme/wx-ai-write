@@ -10,7 +10,12 @@ export {}
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     Counter: typeof import('./src/components/Counter.vue')['default']
+    NutButton: typeof import('@nutui/nutui-taro')['Button']
     NutCell: typeof import('@nutui/nutui-taro')['Cell']
+    NutDialog: typeof import('@nutui/nutui-taro')['Dialog']
+    NutEcard: typeof import('@nutui/nutui-taro')['Ecard']
+    NutFixedNav: typeof import('@nutui/nutui-taro')['FixedNav']
+    NutNoticebar: typeof import('@nutui/nutui-taro')['Noticebar']
     NutPicker: typeof import('@nutui/nutui-taro')['Picker']
     NutPopup: typeof import('@nutui/nutui-taro')['Popup']
     NutTextarea: typeof import('@nutui/nutui-taro')['Textarea']

@@ -1,6 +1,8 @@
 export default {
   pages: [
-    'pages/index/index'
+    'pages/index/index',
+    'pages/history/index',
+    'pages/ecard/index',
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -1,0 +1,143 @@
+<template>
+  <view class="ecard">
+    <nut-noticebar
+      text="如有疑问请及时联系客服。"
+      :background="`rgba(251, 248, 220, 1)`"
+      :color="`#D9500B`"
+    ></nut-noticebar>
+    <div class="ecard-inner">
+      <nut-cell>
+        <nut-ecard
+          choose-text="请选择金额"
+          placeholder="请输入2-1000整数"
+          :card-amount-min="1"
+          :card-amount-max="1000"
+          :card-buy-min="1"
+          :card-buy-max="5"
+          v-model="money"
+          @input-change="inputChange"
+          @change="change"
+          @change-step="changeStep"
+          :data-list="dataList"
+        ></nut-ecard>
+      </nut-cell>
+      <view class="tip">{{ titile }} 支付可获得 {{ parseInt(money * 30) }} 次书写服务</view>
+      <nut-button :loading="isLoading" block type="primary" @click="pay">支付</nut-button>
+
+      <button open-type="contact">
+        客服
+      </button>
+    </div>
+  </view>
+</template>
+
+<script setup>
+import {ref, reactive, computed, onBeforeMount } from 'vue';
+
+const dataList = reactive([
+  {
+    price: 5
+  },
+  {
+    price: 10
+  },
+  {
+    price: 20
+  },
+  {
+    price: 50
+  },
+  {
+    price: 100
+  },
+  {
+    price: 200
+  },
+])
+const money = ref(5);
+
+const inputChange = (val) => {
+  money.value = val;
+};
+
+const change = (item) => {
+  money.value = item.price;
+};
+
+const changeStep = (num, price) => {
+  const val = price * num;
+  money.value = val;
+};
+
+const isLoading = ref(false);
+const times = ref(0)
+const used = ref(0)
+const titile = computed(() => `剩余 ${times.value} 次，已使用 ${ used.value } 次；`)
+
+const getInfo = () => {
+  wx.showLoading()
+  wx.cloud.callFunction({
+    name: 'balance',
+    complete: data => {
+      wx.hideLoading()
+      times.value = data.result.times
+      used.value = data.result.used
+    }
+  })
+}
+
+const pay = () => {
+  wx.showLoading({
+    title: "订单创建中.."
+  });
+  wx.cloud.callFunction({
+    name: 'pay',
+    data: {
+      money: money.value
+    },
+    success: data => {
+      wx.hideLoading()
+      if (data.result.error) {
+        Taro.showToast({
+          title: data.result.context
+        })
+      } else {
+        wx.showLoading({
+          title: "支付中.."
+        });
+        console.log(data)
+        const payment = data.result.payment
+        wx.requestPayment({
+          ...payment,
+          success (res) {
+            wx.hideLoading()
+            console.log('pay success', res)
+          },
+          fail (err) {
+            wx.hideLoading()
+            console.error('pay fail', err)
+          }
+        })
+      }
+    },
+  })
+}
+onBeforeMount(() => {
+  getInfo()
+})
+</script>
+
+<style lang="scss">
+.ecard {
+  padding: 0 0 30px;
+  .ecard-inner {
+    padding: 0 20px;
+  }
+}
+.tip {
+  padding: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+}
+</style>
