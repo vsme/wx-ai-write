@@ -1,11 +1,12 @@
 <template>
   <view class="ecard">
     <nut-noticebar
-      text="如有疑问请及时联系客服。"
+      text="如有疑问请联系客服，以方便问题及时处理。"
       :background="`rgba(251, 248, 220, 1)`"
       :color="`#D9500B`"
-    ></nut-noticebar>
-    <div class="ecard-inner">
+    >
+  </nut-noticebar>
+    <view class="ecard-inner">
       <nut-cell>
         <nut-ecard
           choose-text="请选择金额"
@@ -21,13 +22,20 @@
           :data-list="dataList"
         ></nut-ecard>
       </nut-cell>
-      <view class="tip">{{ titile }} 支付可获得 {{ parseInt(money * 30) }} 次书写服务</view>
-      <nut-button :loading="isLoading" block type="primary" @click="pay">支付</nut-button>
-
-      <button open-type="contact">
-        客服
-      </button>
-    </div>
+      <view class="tip">{{ titile }} 支付可获得 <text>{{ parseInt(money * 30) }} 次</text> 书写服务</view>
+      <nut-row :gutter="10">
+        <nut-col :span="7">
+            <nut-button block open-type="contact">
+              客服
+            </nut-button>
+        </nut-col>
+        <nut-col :span="17">
+            <nut-button :loading="isLoading" block type="primary" @click="pay">
+              支付
+            </nut-button>
+        </nut-col>
+      </nut-row>
+    </view>
   </view>
 </template>
 
@@ -133,11 +141,29 @@ onBeforeMount(() => {
   .ecard-inner {
     padding: 0 20px;
   }
+  .notice {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: 48rpx;
+    align-items: center;
+  }
+  .nut-ecard__list__item {
+    border: 1px solid transparent;
+    outline: none;
+  }
+  .nut-ecard__list__item.active {
+    border: 1px solid var(--nut-primary-color, #fa2c19);
+    outline: none;
+  }
 }
 .tip {
   padding: 10px;
   text-align: center;
   font-size: 12px;
   color: #aaa;
+  text {
+    color: #333;
+  }
 }
 </style>

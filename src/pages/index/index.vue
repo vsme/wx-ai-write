@@ -1,10 +1,7 @@
 <template>
   <view class="index">
     <view class="index-inner">
-      <nut-cell title="选择话题" @click="show = true">
-        <template v-slot:link>
-          <text>{{ popupDesc }}</text> &nbsp; >
-        </template>
+      <nut-cell :desc="popupDesc + '&nbsp;>'" title="选择话题" @click="show = true">
       </nut-cell>
       <nut-popup position="bottom" v-model:visible="show">
         <nut-picker
@@ -16,11 +13,10 @@
         >
         </nut-picker>
       </nut-popup>
-
-      <nut-textarea placeholder="请输入... 可以回答常见问题、技术问题、文化问题、还可以生成文章、新闻、故事等等。" v-model="text" limit-show max-length="200" />
+      <nut-textarea placeholder="请输入..." v-model="text" limit-show :max-length="used >= 3 ? 800 : 200" />
 
       <nut-button type="primary" plain @tap="aiGenerate">
-        点击开始书写
+        点击发送
       </nut-button>
       <view class="tip">
         <text v-if="times > 0 && used == 0">初次见面，赠送 {{times}} 次体验，</text>
@@ -28,7 +24,7 @@
       </view>
 
     </view>
-    <nut-fixed-nav :position="{ bottom:'80px' }" v-model:visible="navVisible" :nav-list="navList" />
+    <nut-fixed-nav :position="{ bottom:'80px' }" v-model:visible="navVisible" @selected="selectedNav" :nav-list="navList" />
 
     <view class="pre" v-if="resultStr">
       {{ resultStr }}
@@ -40,18 +36,19 @@
 </template>
 
 <script setup>
-import {ref, reactive, computed, onBeforeMount} from 'vue'
+import {ref, reactive, computed, onBeforeMount, onMounted} from 'vue'
 import Taro from '@tarojs/taro'
 
 const show = ref(false)
-const popupDesc = ref("直接书写")
+const popupDesc = ref("随便问问")
 const popupValue = ref([""]);
 const text = ref("");
 const resultStr = ref("");
 const columns = ref([
-  { text: '直接书写', value: '' },
-  { text: '小红书文案', value: '小红书文案' },
+  { text: '随便问问', value: '' },
   { text: '编工作日报', value: '编日报' },
+  { text: '写情书', value: '写情书' },
+  { text: '小红书文案', value: '小红书文案' },
   { text: '中文邮件', value: '中文邮件' },
   { text: '英文邮件', value: '英文邮件' },
   // { text: '说了啥', value: '说了啥' },
@@ -138,17 +135,49 @@ onBeforeMount(() => {
   getInfo()
 })
 
+onMounted(() => {
+  // setTimeout(() => {
+  //   showTour.value = true
+  // }, 250);
+})
+
 const navVisible = ref(false)
 const navList = reactive([
   {
     id: 1,
     text: '历史',
+    url: '/pages/history/index',
     icon: 'cloud://cloud1-4g8rhdreaa5a2447.636c-cloud1-4g8rhdreaa5a2447-1254285449/history.png'
   },
   {
     id: 2,
     text: '储值',
+    url: '/pages/ecard/index',
     icon: 'cloud://cloud1-4g8rhdreaa5a2447.636c-cloud1-4g8rhdreaa5a2447-1254285449/me2.png'
+  },
+])
+const selectedNav = (e) => {
+  console.log(e.item.url)
+  Taro.navigateTo({
+    url: e.item.url
+  })
+}
+
+const showTour = ref(false)
+const steps = ref([
+  {
+    content: '选择想要的话题',
+    target: 'target1',
+    location: 'bottom-end'
+  },
+  {
+    content: '这里输入问题或要求，以方便提供回答或建议。',
+    target: 'target2',
+  },
+  {
+    content: '点击发送按钮，稍等20秒，大功告成。',
+    target: 'target3',
+    location: 'top-end'
   },
 ])
 </script>
@@ -161,6 +190,10 @@ const navList = reactive([
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
+    position: relative;
+    .nut-cell__value {
+      color: #666;
+    }
   }
   .nut-textarea {
     padding: 10px;
