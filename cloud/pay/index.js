@@ -26,11 +26,17 @@ exports.main = async (event, context) => {
       "totalFee" : 1,
       "spbillCreateIp" : "127.0.0.1",
     })
+    if (res.resultCode != 'SUCCESS') {
+      return {
+        error: true,
+        context: "订单创建失败"
+      }
+    }
     return res
   } catch(e) {
     return {
       error: true,
-      context: "订单创建失败"
+      context: "微信订单创建失败"
     }
   }
 }

@@ -106,9 +106,12 @@ const pay = () => {
     success: data => {
       wx.hideLoading()
       if (data.result.error) {
-        Taro.showToast({
-          title: data.result.context
+        wx.showToast({
+          title: data.result.context,
+          icon: 'error'
         })
+      } else if (data.result) {
+        console.log('data', data.result)
       } else {
         wx.showLoading({
           title: "支付中.."
