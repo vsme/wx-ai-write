@@ -95,14 +95,13 @@ const reqOpenAI = function (payload) {
   });
 };
 
-const checkMsg = async (content, openid) => {
-  let isNewUser = false
+const checkMsg = async (content, openid, version = 2) => {
   // console.log('checkMsg', content);
   try {
     const data = await cloud.openapi.security.msgSecCheck({
       openid,
       content,
-      version: 2, // 场景枚举值（1 资料；2 评论；3 论坛；4 社交日志）
+      version, // 场景枚举值（1 资料；2 评论；3 论坛；4 社交日志）
       scene: 2,
     });
     if (data)
@@ -152,7 +151,7 @@ exports.main = async (event, context) => {
   // --- 查询剩余次数 ---
   try {
     const balanceData = await db.collection('balance').doc(wxContext.OPENID).get()
-    console.log(balanceData)
+    // console.log(balanceData)
     if (balanceData.data.times <= 0) {
       return {
         error: true,
@@ -169,7 +168,6 @@ exports.main = async (event, context) => {
         used: 0
       }
     })
-    isNewUser = true
   }
 
   // ---- 校验文本是否合规 -----
@@ -218,7 +216,7 @@ exports.main = async (event, context) => {
         context: '没回复内容呢～'
       }
     }
-    const result = await checkMsg(steamStr, wxContext.OPENID)
+    const result = await checkMsg(steamStr, wxContext.OPENID, 1)
     // --- 扣减次数 ---
     db.collection('balance').doc(wxContext.OPENID).update({
       data: {
