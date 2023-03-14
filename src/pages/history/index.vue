@@ -6,8 +6,8 @@
       </view>
       <view class="lang" v-if="item.lang">{{ item.lang }}</view>
       {{ item.result }}
-      <view v-if="!item.resSuggest.suggest"> 内容不合规，已屏蔽。 </view>
-      <view class="btn"><nut-button type="success" @click="copyResult(item)">复制以上文本</nut-button></view>
+      <view v-if="item.resSuggest.suggest !== 'pass'"> 内容不合规，已屏蔽。 </view>
+      <view v-if="item.resSuggest.suggest === 'pass'" class="btn"><nut-button type="success" @click="copyResult(item)">复制以上文本</nut-button></view>
     </view>
 
     <view class="btn">
