@@ -32,16 +32,23 @@ exports.main = async (event, context) => {
   // "transactionId":"4200001804202303143078361509",
   // "userInfo":{"appId":"wx1e69038a5519c299","openId":"oACPq0JRepF--hP1GKKSiq2vd_uo"}
   // }
-
-  db.collection('order').doc(event.outTradeNo).update({
-    data: event
-  })
-
-  db.collection('balance').doc(event.subOpenid).update({
-    data: {
-      times: _.inc(parseInt(event.totalFee / 100 * 30)),
+  try {
+    const data = await db.collection('order').doc(event.outTradeNo).get()
+    if (!data.done) {
+      await db.collection('balance').doc(event.subOpenid).update({
+        data: {
+          times: _.inc(parseInt(event.totalFee / 100 * 30)),
+        }
+      })
     }
-  })
+  
+    db.collection('order').doc(event.outTradeNo).update({
+      data: {
+        ...event,
+        done: true
+      }
+    })
+  } catch {}
 
   return  {
     errcode: 0,

@@ -95,14 +95,14 @@ const reqOpenAI = function (payload) {
   });
 };
 
-const checkMsg = async (content, openid, version = 2) => {
+const checkMsg = async (content, openid, scene) => {
   // console.log('checkMsg', content);
   try {
     const data = await cloud.openapi.security.msgSecCheck({
       openid,
       content,
-      version, // 场景枚举值（1 资料；2 评论；3 论坛；4 社交日志）
-      scene: 2,
+      version: 2,
+      scene, // 场景枚举值（1 资料；2 评论；3 论坛；4 社交日志）
     });
     if (data)
     // console.log('checkMsg', data);
@@ -171,7 +171,7 @@ exports.main = async (event, context) => {
   }
 
   // ---- 校验文本是否合规 -----
-  const result = await checkMsg(text, wxContext.OPENID)
+  const result = await checkMsg(text, wxContext.OPENID, 2)
 
   db.collection('task').doc(_id).update({
     data: {
@@ -236,7 +236,7 @@ exports.main = async (event, context) => {
     if (result.suggest !== 'pass') {
       return {
         error: true,
-        context: '小跟班回复涉及敏感内容，已不展示。'
+        context: '回复涉及敏感内容，已不展示。'
       }
     }
     return {

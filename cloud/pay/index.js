@@ -23,6 +23,8 @@ exports.main = async (event, context) => {
       _openid: wxContext.OPENID,
       createTime: db.serverDate(),
       subMchId,
+      totalFee: parseInt(event.money * 100),
+      done: false
     }
   })
 

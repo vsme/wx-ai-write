@@ -29,13 +29,18 @@ exports.main = async (event, context) => {
       .get()
 
       for (let o of result.data) {
-        if (o.resSuggest.suggest != 'pass') {
+        if (o.resSuggest && o.resSuggest.suggest != 'pass') {
           o.result = ''
+        } else if (!o.resSuggest) {
+          o.result = '...'
+          o.resSuggest = {
+            suggest: 'pass'
+          }
         }
       }
 
-  // 返回查询结果
-  return result.data
+    // 返回查询结果
+    return result.data
   } catch {
     return []
   }
