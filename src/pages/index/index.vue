@@ -20,7 +20,7 @@
       </nut-button>
       <view class="tip">
         <text v-if="times > 0 && used == 0">初次见面，赠送 {{times}} 次体验，</text>
-        {{ titile }}
+        <text v-if="used < 10">{{ titile }}</text>
       </view>
 
     </view>
@@ -37,7 +37,7 @@
 
 <script setup>
 import {ref, reactive, computed, onBeforeMount, onMounted} from 'vue'
-import Taro from '@tarojs/taro'
+import Taro, {usePullDownRefresh} from '@tarojs/taro'
 
 const show = ref(false)
 const popupDesc = ref("随便问问")
@@ -127,11 +127,16 @@ const getInfo = () => {
       wx.hideLoading()
       times.value = data.result.times
       used.value = data.result.used
+      wx.stopPullDownRefresh()
     }
   })
 }
 
 onBeforeMount(() => {
+  getInfo()
+})
+
+usePullDownRefresh(() => {
   getInfo()
 })
 

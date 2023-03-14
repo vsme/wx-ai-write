@@ -16,15 +16,25 @@ exports.main = async (event, context) => {
     }
   }
 
+  const subMchId = '1463349102'
+
+  const order = await db.collection('order').add({
+    data: {
+      _openid: wxContext.OPENID,
+      createTime: db.serverDate(),
+      subMchId,
+    }
+  })
+
   try {
     const res = await cloud.cloudPay.unifiedOrder({
-      "envId": "cloud1-4g8rhdreaa5a2447",
-      "functionName": "pay_cb",
-      "subMchId" : "1463349102",
-      "body" : "购买书写服务",
-      "outTradeNo" : "1",
-      "totalFee" : 1,
-      "spbillCreateIp" : "127.0.0.1",
+      envId: "cloud1-4g8rhdreaa5a2447",
+      functionName: "paycb",
+      body: "购买书写服务",
+      spbillCreateIp: "127.0.0.1",
+      subMchId,
+      outTradeNo: order._id,
+      totalFee: parseInt(event.money * 100),
     })
     if (res.resultCode != 'SUCCESS') {
       return {

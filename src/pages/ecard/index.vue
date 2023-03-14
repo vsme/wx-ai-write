@@ -25,14 +25,14 @@
       <view class="tip">{{ titile }} 支付可获得 <text>{{ parseInt(money * 30) }} 次</text> 书写服务</view>
       <nut-row :gutter="10">
         <nut-col :span="7">
-            <nut-button block open-type="contact">
-              客服
-            </nut-button>
+          <nut-button block open-type="contact">
+            客服
+          </nut-button>
         </nut-col>
         <nut-col :span="17">
-            <nut-button :loading="isLoading" block type="primary" @click="pay">
-              支付
-            </nut-button>
+          <nut-button :loading="isLoading" block type="primary" @click="pay">
+            支付
+          </nut-button>
         </nut-col>
       </nut-row>
     </view>
@@ -110,9 +110,7 @@ const pay = () => {
           title: data.result.context,
           icon: 'error'
         })
-      } else if (data.result) {
-        console.log('data', data.result)
-      } else {
+      } else if (data.result && data.result.payment) {
         wx.showLoading({
           title: "支付中.."
         });
@@ -121,13 +119,23 @@ const pay = () => {
         wx.requestPayment({
           ...payment,
           success (res) {
-            wx.hideLoading()
-            console.log('pay success', res)
+            setTimeout(() => {
+              wx.showToast({
+                title: '支付成功'
+              })
+              getInfo()
+              wx.hideLoading()
+            }, 250);
           },
           fail (err) {
             wx.hideLoading()
             console.error('pay fail', err)
           }
+        })
+      } else {
+        wx.showToast({
+          title: '数据出错',
+          icon: 'error'
         })
       }
     },
